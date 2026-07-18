@@ -50,6 +50,24 @@ api.get(
 api.get("/health", (c) => {
   const piholeEnabled = Boolean(config.piholeUrl && config.piholePassword);
   const caddyEnabled = Boolean(config.caddySnippetPath);
+  const caddyReload = Boolean(
+    config.caddyAdminUrl && config.caddyCaddyfilePath,
+  );
+
+  let caddyDetail: string;
+  if (!caddyEnabled) {
+    caddyDetail =
+      "Not configured — set CADDY_SNIPPET_PATH and import that file from Caddy, or add routes by hand";
+  } else if (config.dryRunIntegrations) {
+    caddyDetail =
+      "Configured, but DRY_RUN_INTEGRATIONS=true — snippet writes are simulated only";
+  } else if (caddyReload) {
+    caddyDetail =
+      "Enabled — writes CADDY_SNIPPET_PATH and reloads Caddy via CADDY_ADMIN_URL";
+  } else {
+    caddyDetail =
+      "Enabled — writes CADDY_SNIPPET_PATH (import that file from Caddy; set CADDY_ADMIN_URL + CADDY_CADDYFILE_PATH to auto-reload)";
+  }
 
   return c.json({
     ok: true,
@@ -73,12 +91,9 @@ api.get("/health", (c) => {
       },
       caddySnippet: {
         enabled: caddyEnabled,
+        reload: caddyReload,
         label: "Caddy snippet writer",
-        detail: caddyEnabled
-          ? config.dryRunIntegrations
-            ? "Configured, but DRY_RUN_INTEGRATIONS=true — snippet writes are simulated only"
-            : "Enabled — proxied services are written to CADDY_SNIPPET_PATH (import that file from your Caddyfile)"
-          : "Not configured — set CADDY_SNIPPET_PATH and import the file from Caddy, or add routes by hand",
+        detail: caddyDetail,
       },
     },
     // legacy booleans for older clients

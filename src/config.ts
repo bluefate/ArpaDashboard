@@ -26,6 +26,15 @@ export const config = {
   piholeUrl: process.env.PIHOLE_URL?.trim().replace(/\/$/, "") || "",
   piholePassword: process.env.PIHOLE_PASSWORD ?? "",
   caddySnippetPath: process.env.CADDY_SNIPPET_PATH?.trim() || "",
+  /** Comma-separated zones included in the auto snippet. Empty = all proxied. */
+  caddySnippetZones: (process.env.CADDY_SNIPPET_ZONES ?? "")
+    .split(",")
+    .map((z) => z.trim().toLowerCase())
+    .filter(Boolean),
+  /** Caddy admin API base, e.g. http://192.168.1.10:2019 — used to reload after snippet write */
+  caddyAdminUrl: process.env.CADDY_ADMIN_URL?.trim().replace(/\/$/, "") || "",
+  /** Path to the main Caddyfile (readable by this process) for admin /load */
+  caddyCaddyfilePath: process.env.CADDY_CADDYFILE_PATH?.trim() || "",
   dataPath: process.env.DATA_PATH?.trim() || "./data/services.json",
   dryRunIntegrations: bool(process.env.DRY_RUN_INTEGRATIONS, false),
 };

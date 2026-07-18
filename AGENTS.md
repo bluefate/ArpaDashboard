@@ -12,40 +12,37 @@ Register a developer machine’s app under **`*.dev.home.arpa`** so it is reacha
 https://<name>.dev.home.arpa
 ```
 
-(no port in the URL). That requires **`proxy: true`** (default) plus a reverse proxy (usually Caddy) that forwards the hostname to `ip:port`.
+(no port in the URL). Use **`proxy: true`** (default). On a fully configured instance, **one API call** updates the registry, Pi-hole Local DNS, and Caddy routes.
 
 ## Prerequisites
 
-1. ArpaDashboard is running and reachable (example base: `https://home.home.arpa` or `http://127.0.0.1:8787`).
-2. You have `API_KEY` (Bearer token).
-3. The app listens on a **LAN IP** (not `127.0.0.1` / `localhost`) so other devices and the proxy can reach it.
-4. You know the listen **port** (e.g. Vite `5174`).
+1. ArpaDashboard is running (`BASE`, e.g. `https://home.home.arpa`).
+2. You have `API_KEY` (Bearer). You do **not** need the Pi-hole password — that is operator-only in server env.
+3. App listens on a **LAN IP** (not `127.0.0.1`) and a known **port**.
 
-### Obtain `API_KEY`
-
-- Local Docker/Node: value of `API_KEY` in the instance `.env` (never commit this file).
-- Shared lab: ask the lab operator; they read it from the instance secrets/env file only.
-- Do **not** invent a key or reuse unrelated passwords.
-
-## Preferred path: HTTP API
-
-Base URL: `<BASE>` = origin of ArpaDashboard (no trailing slash), e.g. `https://home.home.arpa`.
-
-### 1. Health check
+### Confirm automation is on
 
 ```bash
 curl -sS "$BASE/api/health"
 ```
 
-Expect JSON with `"ok": true` and a `zones` array that includes `dev.home.arpa`.
+Expect:
 
-### 2. Register / upsert (portless URL)
+- `integrations.pihole.enabled: true`
+- `integrations.caddySnippet.enabled: true` (and ideally reload configured)
 
-Replace placeholders. Keep `"proxy": true`.
+If either is `false`, stop and tell the lab operator — registration alone will not publish DNS/HTTPS.
+
+### Obtain `API_KEY`
+
+- From the instance `.env` / secrets (`API_KEY=…`), or ask the lab admin.
+- Never invent a key or commit it.
+
+## Register (single step when automation is on)
 
 ```bash
-export BASE='https://home.home.arpa'   # or http://127.0.0.1:8787
-export API_KEY='…'                     # from .env / lab admin
+export BASE='https://home.home.arpa'
+export API_KEY='…'
 
 curl -sS -X POST "$BASE/api/services" \
   -H "Authorization: Bearer $API_KEY" \
@@ -62,94 +59,54 @@ curl -sS -X POST "$BASE/api/services" \
   }'
 ```
 
-| Field | Rule |
-|---|---|
-| `name` | DNS label only (`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`). Hostname becomes `name.zone`. |
-| `zone` | Must be `dev.home.arpa` for WIP / laptop work. |
-| `ip` | Machine **Network** IPv4 from the app (Vite “Network” line), never `127.0.0.1`. |
-| `port` | **Required** when `proxy` is true (backend for Caddy). |
-| `proxy` | `true` → DNS points at `CADDY_IP`; public URL has **no port**. |
-| `group` | Dashboard category (use `Development` for WIP). |
+Check the JSON `integrations` object:
 
-Success: HTTP `201` (created) or `200` (updated). Body includes `service.hostname`, `service.href`, and `integrations`.
+- `dns.ok` / not skipped → Pi-hole updated
+- `caddy.ok` / not skipped → snippet written (and reloaded if admin URL is set)
 
-### 3. Verify registry
+Then:
 
 ```bash
 curl -sS "$BASE/api/services?zone=dev.home.arpa"
 ```
 
-Confirm your `hostname` appears (e.g. `myapp.dev.home.arpa`).
+Open `https://myapp.dev.home.arpa` (trust the lab local CA if prompted).
 
-### 4. Reverse proxy (required for no-port HTTPS)
+| Field | Rule |
+|---|---|
+| `name` | DNS label → `name.zone` |
+| `zone` | `dev.home.arpa` for WIP |
+| `ip` | LAN Network IP from the app (Vite “Network” line) |
+| `port` | Required when `proxy: true` |
+| `proxy` | `true` for portless HTTPS via Caddy |
+| `protocol` | Public URL scheme (`https`); backend is HTTP to Caddy |
 
-If this instance has **Caddy snippet automation** enabled (`CADDY_SNIPPET_PATH` set), the API response `integrations.caddy` should succeed and the proxy reloads or already imports that snippet.
+## UI alternative
 
-If snippet automation is **off** (common): after API success, the lab operator must add a Caddy (or equivalent) site for `myapp.dev.home.arpa` → `reverse_proxy <ip>:<port>`, then reload the proxy. DNS alone is not enough for portless HTTPS.
+`$BASE/dev.html` — same fields; leave **Proxy via Caddy** checked. OpenAPI: `$BASE/api/docs`.
 
-### 5. Open the app
+## Update / delete
 
-```text
-https://myapp.dev.home.arpa
-```
-
-Clients must trust the lab’s local CA if using HTTPS with an internal certificate.
-
-## UI alternative (same defaults)
-
-1. Open `$BASE/dev.html`
-2. Paste `API_KEY`
-3. Fill name, LAN IP, port; leave **Proxy via Caddy** checked
-4. Save
-5. Complete proxy step above if snippets are not automated
-
-Interactive OpenAPI: `$BASE/api/docs` (Authorize with the same key).
-
-## Update vs create
-
-`POST /api/services` **upserts by hostname** (`name` + `zone`). Same name+zone updates IP/port/title/etc.
-
-Partial update:
-
-```bash
-curl -sS -X PATCH "$BASE/api/services/<id>" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"port": 5175, "group": "Development"}'
-```
-
-List ids via `GET /api/services` or `GET /api/services?zone=dev.home.arpa`.
-
-## Cleanup
-
-```bash
-curl -sS -X DELETE "$BASE/api/services/<id>" \
-  -H "Authorization: Bearer $API_KEY"
-```
-
-Or move to category `Paused` via Manage UI / `PATCH` `{"group":"Paused","paused":true}`.
+`POST /api/services` upserts by hostname. Or `PATCH` / `DELETE` `/api/services/:id` with Bearer auth.
 
 ## Agent checklist
 
-- [ ] Used LAN IP, not localhost
-- [ ] `zone` is `dev.home.arpa`
-- [ ] `proxy: true` and `port` set (portless public URL)
-- [ ] `Authorization: Bearer` header present on writes
-- [ ] Confirmed service in `GET /api/services?zone=dev.home.arpa`
-- [ ] Confirmed reverse proxy targets `ip:port` (snippet or manual)
-- [ ] Did not commit `API_KEY` or `.env`
+- [ ] `/api/health` shows Pi-hole + Caddy snippet enabled
+- [ ] LAN IP, not localhost; `zone=dev.home.arpa`; `proxy: true`; `port` set
+- [ ] Response `integrations` dns/caddy succeeded
+- [ ] Service listed in `GET /api/services?zone=dev.home.arpa`
+- [ ] Did not commit or log `API_KEY`
 
 ## Do not
 
-- Do not use `*.local` or public `.dev` as the zone.
-- Do not invent zones outside `ALLOWED_ZONES` (default: `home.arpa`, `dev.home.arpa`, `test.home.arpa`).
-- Do not register with `proxy: false` if the requirement is a **portless** URL (that mode needs `:port` or a separate proxy setup).
-- Do not print secrets into logs, PRs, or public docs.
+- Do not ask the developer for `PIHOLE_PASSWORD` (server-side only).
+- Do not add manual Caddy blocks when snippet automation is enabled — the API owns `*.dev` / `*.test` routes.
+- Do not use `.local` or public `.dev` as the zone.
 
-## Stable vs WIP zones
+## Zones
 
-| Zone | Use |
-|---|---|
-| `home.arpa` | Deployed / shared stable services |
-| `dev.home.arpa` | Laptop / WIP (this guide) |
-| `test.home.arpa` | Temporary experiments |
+| Zone | Use | Typical routing |
+|---|---|---|
+| `home.arpa` | Stable / shared | Often hand-managed in the main Caddyfile |
+| `dev.home.arpa` | Laptop / WIP | Auto snippet + Pi-hole |
+| `test.home.arpa` | Experiments | Auto snippet + Pi-hole |
