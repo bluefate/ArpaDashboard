@@ -161,6 +161,8 @@ With `proxy: false`, DNS targets the service `ip` directly (good for SSH or non-
 
 Interactive docs (Swagger UI): **`/api/docs`** — OpenAPI JSON at `/api/openapi.json`.
 
+**Agents:** step-by-step registration (health → upsert → verify → proxy) is in [`AGENTS.md`](./AGENTS.md) (also served at `/AGENTS.md` on a running instance).
+
 All mutating routes require `Authorization: Bearer <API_KEY>`.
 
 | Method | Path | Description |

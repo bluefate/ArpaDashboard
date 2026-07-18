@@ -161,6 +161,15 @@ export function buildOpenApiDocument() {
           summary: "List services",
           operationId: "listServices",
           security: [],
+          parameters: [
+            {
+              name: "zone",
+              in: "query",
+              required: false,
+              description: "Filter by zone (e.g. home.arpa, dev.home.arpa)",
+              schema: { type: "string" },
+            },
+          ],
           responses: {
             "200": {
               description: "Service list",
@@ -173,6 +182,11 @@ export function buildOpenApiDocument() {
                       services: {
                         type: "array",
                         items: { $ref: "#/components/schemas/ServiceRecord" },
+                      },
+                      zone: {
+                        type: "string",
+                        nullable: true,
+                        description: "Echo of the zone filter, or null",
                       },
                     },
                   },

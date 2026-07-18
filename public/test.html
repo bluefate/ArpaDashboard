@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>home.arpa · ArpaDashboard</title>
+  <title>test.home.arpa · ArpaDashboard</title>
   <script>
     (function () {
       try {
@@ -16,7 +16,7 @@
   </script>
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body data-zone="home.arpa">
+<body data-zone="test.home.arpa">
   <div class="page">
     <header class="topbar">
       <div class="brand">
@@ -27,9 +27,9 @@
         </div>
       </div>
       <nav class="nav" aria-label="Primary">
-        <a class="nav-link is-active" href="/">home.arpa</a>
+        <a class="nav-link" href="/">home.arpa</a>
         <a class="nav-link" href="/dev.html">dev.home.arpa</a>
-        <a class="nav-link" href="/test.html">test.home.arpa</a>
+        <a class="nav-link is-active" href="/test.html">test.home.arpa</a>
         <a class="nav-link" href="/manage.html">Manage</a>
         <a class="nav-link" href="/api/docs">API</a>
         <a class="nav-link" href="/howto.html">How to</a>
@@ -49,30 +49,16 @@
     </header>
 
     <main class="content">
-      <section class="status-panel" id="status-panel" aria-label="Integration status">
-        <div class="status-head">
-          <h2>Automation status</h2>
-          <p>What happens when you register a service via the API or Manage form</p>
-        </div>
-        <div class="status-grid" id="status-grid"></div>
-        <p class="status-note">
-          This page lists <code>home.arpa</code> only. Use
-          <a href="/dev.html">dev.home.arpa</a> for WIP projects,
-          <a href="/manage.html">Manage</a> to move categories, or
-          <a href="/api/docs">API docs</a> (Swagger).
-        </p>
-      </section>
-
       <div class="page-head">
-        <h1>home.arpa</h1>
-        <p class="lede">Stable / deployed services, grouped by category.</p>
+        <h1>test.home.arpa</h1>
+        <p class="lede">Temporary experiments. Register via <a href="/manage.html">Manage</a> or the <a href="/api/docs">API</a>.</p>
       </div>
       <div id="groups"></div>
-      <p class="empty" id="empty" hidden>No services in <code>home.arpa</code> yet.</p>
+      <p class="empty" id="empty" hidden>No services in <code>test.home.arpa</code> yet.</p>
     </main>
 
     <footer class="foot">
-      <p class="foot-note">Trust your reverse-proxy local CA on each client. Prefer <code>*.home.arpa</code> names over raw IPs.</p>
+      <p class="foot-note">Keep ArpaDashboard on your LAN or VPN. Do not expose the API to the public internet.</p>
       <a href="https://bluefatelabs.com/" target="_blank" rel="noopener noreferrer">
         <img class="foot-logo foot-logo-light" alt="BlueFate Labs" src="/images/bluefatelabs-logo.svg" width="160" height="58" />
         <img class="foot-logo foot-logo-dark" alt="BlueFate Labs" src="/images/bluefatelabs-logo-dark.svg" width="160" height="58" />

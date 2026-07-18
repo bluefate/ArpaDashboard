@@ -88,8 +88,12 @@ api.get("/health", (c) => {
 });
 
 api.get("/services", async (c) => {
-  const services = await listServices();
-  return c.json({ services: dashboardPayload(services) });
+  const zone = c.req.query("zone")?.trim().toLowerCase();
+  let services = await listServices();
+  if (zone) {
+    services = services.filter((s) => s.zone.toLowerCase() === zone);
+  }
+  return c.json({ services: dashboardPayload(services), zone: zone || null });
 });
 
 api.get("/services/:id", async (c) => {

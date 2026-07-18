@@ -16,8 +16,8 @@
 - [ ] Optional `accent` on register API examples in README
 - [ ] CI for public GitHub (lint/typecheck/build) — GitHub Actions
 - [ ] Healthcheck / uptime optional field on services
-- [ ] Categories UI (move services between groups) + zone-filtered pages
-- [ ] Dev-zone register form (locked to `dev.home.arpa`)
+- [x] Categories UI (move services between groups) + zone-filtered pages
+- [x] Dev-zone register form (locked to `dev.home.arpa`)
 - [ ] Soft-merge seed/import so paused entries are not overwritten
 
 ## Notes

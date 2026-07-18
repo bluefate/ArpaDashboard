@@ -27,7 +27,10 @@
         </div>
       </div>
       <nav class="nav" aria-label="Primary">
-        <a class="nav-link" href="/">Services</a>
+        <a class="nav-link" href="/">home.arpa</a>
+        <a class="nav-link" href="/dev.html">dev.home.arpa</a>
+        <a class="nav-link" href="/test.html">test.home.arpa</a>
+        <a class="nav-link" href="/manage.html">Manage</a>
         <a class="nav-link" href="/api/docs">API</a>
         <a class="nav-link is-active" href="/howto.html">How to</a>
       </nav>
@@ -118,6 +121,25 @@
           <li>Optional: set <code>CADDY_SNIPPET_PATH</code> and import that file from Caddy.</li>
           <li>Start the app (<code>npm run dev</code> or Docker Compose).</li>
         </ol>
+      </article>
+
+      <article class="guide-block">
+        <h2>Zones and categories</h2>
+        <ul>
+          <li><a href="/"><code>home.arpa</code></a> — deployed / stable services</li>
+          <li><a href="/dev.html"><code>dev.home.arpa</code></a> — laptop / WIP (register form on that page)</li>
+          <li><a href="/test.html"><code>test.home.arpa</code></a> — temporary experiments</li>
+        </ul>
+        <p>
+          Cards are grouped by <strong>category</strong> (the <code>group</code> field).
+          Use <a href="/manage.html">Manage</a> to move a service between categories
+          (including <code>Paused</code>) without re-registering.
+        </p>
+        <p>
+          <strong>Agents / automation:</strong> follow the step checklist in
+          <a href="/AGENTS.md"><code>/AGENTS.md</code></a>
+          (health → <code>POST /api/services</code> with <code>proxy: true</code> → verify → ensure reverse proxy).
+        </p>
       </article>
 
       <article class="guide-block">
