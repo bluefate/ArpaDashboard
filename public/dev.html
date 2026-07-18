@@ -29,7 +29,6 @@
       <nav class="nav" aria-label="Primary">
         <a class="nav-link" href="/">home.arpa</a>
         <a class="nav-link is-active" href="/dev.html">dev.home.arpa</a>
-        <a class="nav-link" href="/test.html">test.home.arpa</a>
         <a class="nav-link" href="/manage.html">Manage</a>
         <a class="nav-link" href="/api/docs">API</a>
         <a class="nav-link" href="/howto.html">How to</a>
@@ -60,11 +59,14 @@
         </p>
       </div>
 
-      <section class="form-panel" aria-label="Register development service">
-        <div class="status-head">
-          <h2>Register or update</h2>
-          <p>Upserts by hostname · needs <code>API_KEY</code> · default = proxied (no port in the URL)</p>
-        </div>
+      <details class="form-panel register-details" id="register-panel">
+        <summary class="register-summary">
+          <span class="register-summary-title">Register or update</span>
+          <span class="register-summary-hint">Collapsed · API key · click to expand</span>
+        </summary>
+        <p class="register-lede">
+          Upserts by hostname · needs <code>API_KEY</code> · default = proxied (no port in the URL)
+        </p>
         <form id="dev-form" class="service-form">
           <label class="field field-wide">
             <span>API key</span>
@@ -112,7 +114,7 @@
           <option value="Applications"></option>
           <option value="Paused"></option>
         </datalist>
-      </section>
+      </details>
 
       <div class="page-head">
         <h2>Registered</h2>

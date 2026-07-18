@@ -20,6 +20,7 @@ import {
   syncCaddySnippet,
 } from "./integrations/caddy.js";
 import { buildOpenApiDocument } from "./openapi.js";
+import { probeServices } from "./probe.js";
 
 type Variables = {
   authed: boolean;
@@ -109,6 +110,21 @@ api.get("/services", async (c) => {
     services = services.filter((s) => s.zone.toLowerCase() === zone);
   }
   return c.json({ services: dashboardPayload(services), zone: zone || null });
+});
+
+/** Best-effort HTTP reachability of each service backend (ip:port). */
+api.get("/reachability", async (c) => {
+  const zone = c.req.query("zone")?.trim().toLowerCase();
+  let services = await listServices();
+  if (zone) {
+    services = services.filter((s) => s.zone.toLowerCase() === zone);
+  }
+  const results = await probeServices(services);
+  return c.json({
+    results,
+    zone: zone || null,
+    checked_at: new Date().toISOString(),
+  });
 });
 
 api.get("/services/:id", async (c) => {

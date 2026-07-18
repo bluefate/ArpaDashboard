@@ -95,7 +95,7 @@ export function buildOpenApiDocument() {
       title: "ArpaDashboard API",
       version: "0.1.0",
       description:
-        "Register and manage `home.arpa` / `dev.home.arpa` / `test.home.arpa` services. " +
+        "Register and manage `home.arpa` / `dev.home.arpa` services. " +
         "Write operations require `Authorization: Bearer <API_KEY>`. " +
         "When configured, create/update/delete also upsert or remove Pi-hole Local DNS and optional Caddy snippets.",
       contact: {
@@ -131,6 +131,59 @@ export function buildOpenApiDocument() {
               content: {
                 "application/json": {
                   schema: { $ref: "#/components/schemas/Health" },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/reachability": {
+        get: {
+          tags: ["Health"],
+          summary: "Probe service backends (HTTP to ip:port)",
+          description:
+            "Best-effort check whether each registered backend responds. " +
+            "Any HTTP response counts as up. Non-HTTP ports and paused services are skipped.",
+          operationId: "getReachability",
+          security: [],
+          parameters: [
+            {
+              name: "zone",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Reachability results",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["results"],
+                    properties: {
+                      results: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          required: ["id", "hostname", "status", "detail"],
+                          properties: {
+                            id: { type: "string" },
+                            hostname: { type: "string" },
+                            status: {
+                              type: "string",
+                              enum: ["up", "down", "skipped", "paused"],
+                            },
+                            detail: { type: "string" },
+                            ms: { type: "number" },
+                          },
+                        },
+                      },
+                      zone: { type: ["string", "null"] },
+                      checked_at: { type: "string", format: "date-time" },
+                    },
+                  },
                 },
               },
             },

@@ -119,7 +119,7 @@ async function main() {
   keyInput.value = getStoredApiKey();
 
   const health = await fetch("/api/health").then((r) => r.json());
-  zones = health.zones || ["home.arpa", "dev.home.arpa", "test.home.arpa"];
+  zones = health.zones || ["home.arpa", "dev.home.arpa"];
   regZone.innerHTML = zones
     .map((z) => `<option value="${escapeHtml(z)}">${escapeHtml(z)}</option>`)
     .join("");

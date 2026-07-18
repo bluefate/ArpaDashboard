@@ -52,8 +52,12 @@ export function card(service) {
   const kindChip =
     kind === "home" ? "" : `<span class="chip chip-dev">${kind}</span>`;
 
+  const initialStatus = service.paused ? "paused" : "checking";
+  const initialLabel = service.paused ? "Paused" : "Checking…";
+
   return `
-    <a class="card card-${accent}${paused}" href="${service.href}" ${service.paused ? 'aria-disabled="true"' : ""}>
+    <a class="card card-${accent}${paused}" href="${service.href}" data-service-id="${escapeHtml(service.id)}" ${service.paused ? 'aria-disabled="true"' : ""}>
+      <span class="card-status is-${initialStatus}" data-reachability title="Checking backend…">${escapeHtml(initialLabel)}</span>
       <p class="card-title">${escapeHtml(service.title || service.name)}</p>
       <p class="card-desc">${escapeHtml(service.description || service.hostname)}</p>
       <p class="card-host">${escapeHtml(service.hostname)}</p>
@@ -65,7 +69,46 @@ export function card(service) {
   `;
 }
 
-export function renderCategorySections(services, groupsEl) {
+const STATUS_LABEL = {
+  up: "Running",
+  down: "Down",
+  skipped: "No check",
+  paused: "Paused",
+};
+
+/** Fetch `/api/reachability` and update card status badges in rootEl. */
+export async function applyReachability(rootEl, { zone } = {}) {
+  if (!rootEl) return;
+  const url = zone
+    ? `/api/reachability?zone=${encodeURIComponent(zone)}`
+    : "/api/reachability";
+  try {
+    const data = await fetch(url).then((r) => r.json());
+    const byId = new Map((data.results || []).map((r) => [r.id, r]));
+    for (const el of rootEl.querySelectorAll("[data-reachability]")) {
+      const cardEl = el.closest("[data-service-id]");
+      const id = cardEl?.dataset.serviceId;
+      const result = id ? byId.get(id) : null;
+      if (!result) {
+        el.textContent = "Unknown";
+        el.className = "card-status is-skipped";
+        el.title = "No reachability result";
+        continue;
+      }
+      el.textContent = STATUS_LABEL[result.status] || result.status;
+      el.className = `card-status is-${result.status}`;
+      el.title = result.ms != null ? `${result.detail} · ${result.ms}ms` : result.detail;
+    }
+  } catch (err) {
+    for (const el of rootEl.querySelectorAll("[data-reachability]")) {
+      el.textContent = "Unknown";
+      el.className = "card-status is-skipped";
+      el.title = String(err.message || err);
+    }
+  }
+}
+
+export function renderCategorySections(services, groupsEl, { zone, probe = true } = {}) {
   const groups = groupServices(services);
   groupsEl.innerHTML = groups
     .map(
@@ -81,6 +124,9 @@ export function renderCategorySections(services, groupsEl) {
       </section>`,
     )
     .join("");
+  if (probe) {
+    void applyReachability(groupsEl, { zone });
+  }
 }
 
 export function getStoredApiKey() {

@@ -13,7 +13,7 @@ Home labs grow messy fast: containers on a NAS, Pi-hole on a Raspberry Pi, apps 
 1. **See what’s running** — a browser dashboard of your lab services, grouped however you like (business apps, git, NAS UIs, WIP projects, and so on).
 2. **Register a service with an API** — send a protected request with a name, zone, IP, and port instead of editing Pi-hole and Caddy by hand.
 3. **Wire DNS and HTTPS for you** (optional integrations) — create/update a Local DNS record in Pi-hole and write a Caddy snippet so clients reach `https://shop.dev.home.arpa` without typing a port.
-4. **Separate deploy vs. development** — stable services live under `*.home.arpa`; laptop/WIP work under `*.dev.home.arpa`; experiments under `*.test.home.arpa`.
+4. **Separate deploy vs. development** — stable services live under `*.home.arpa`; laptop/WIP work under `*.dev.home.arpa`.
 
 Typical flow: register `shop` on `dev.home.arpa` pointing at your Mac’s LAN IP and port → the dashboard shows a card → DNS resolves the hostname to your reverse proxy → Caddy terminates TLS and proxies to the real backend.
 
@@ -25,8 +25,6 @@ It is meant for **private LANs / VPNs only**, not the public internet. Use it as
 |---|---|---|
 | `*.home.arpa` | Deployed / stable services | `nas.home.arpa` |
 | `*.dev.home.arpa` | Local / laptop / WIP | `shop.dev.home.arpa` |
-| `*.test.home.arpa` | Temporary / experimental | `spike.test.home.arpa` |
-
 Do **not** invent other names under `.arpa` (for example `dev.arpa`). Only IANA/IAB add infrastructure names there. Stay under `home.arpa`.
 
 Avoid `.local` (mDNS/Bonjour) and `.dev` (public TLD with forced HTTPS).

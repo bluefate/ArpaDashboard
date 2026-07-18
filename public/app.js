@@ -38,7 +38,7 @@ async function main() {
       return;
     }
 
-    renderCategorySections(services, groupsEl);
+    renderCategorySections(services, groupsEl, { zone: zone || undefined });
   } catch (err) {
     meta.textContent = "Failed to load services";
     empty.hidden = false;

@@ -12,7 +12,7 @@ function bool(value: string | undefined, fallback: boolean): boolean {
   return ["1", "true", "yes", "on"].includes(value.toLowerCase());
 }
 
-const defaultZones = ["home.arpa", "dev.home.arpa", "test.home.arpa"];
+const defaultZones = ["home.arpa", "dev.home.arpa"];
 
 export const config = {
   port: Number(process.env.PORT ?? 8787),

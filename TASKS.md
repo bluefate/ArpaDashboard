@@ -3,7 +3,7 @@
 ## Done
 
 - [x] Public repo scaffold (MIT, API, dashboard, zones)
-- [x] Naming: `home.arpa` / `dev.home.arpa` / `test.home.arpa`
+- [x] Naming: `home.arpa` / `dev.home.arpa`
 - [x] Optional Pi-hole + Caddy snippet adapters
 - [x] How to + uninstall docs in UI
 - [x] Support link + BlueFate Labs footer

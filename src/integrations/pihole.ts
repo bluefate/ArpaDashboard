@@ -43,6 +43,48 @@ async function piholeLogout(session: PiholeSession): Promise<void> {
   }
 }
 
+async function listHosts(session: PiholeSession): Promise<string[]> {
+  const getRes = await fetch(`${config.piholeUrl}/api/config/dns/hosts`, {
+    headers: { sid: session.sid },
+  });
+  if (!getRes.ok) {
+    throw new Error(`Failed to read dns.hosts (${getRes.status})`);
+  }
+  const current = (await getRes.json()) as {
+    config?: { dns?: { hosts?: string[] } };
+  };
+  return [...(current.config?.dns?.hosts ?? [])];
+}
+
+/** Pi-hole v6: PUT/DELETE `/api/config/dns/hosts/<ip>%20<hostname>` (not JSON body replace). */
+async function putHost(session: PiholeSession, entry: string): Promise<void> {
+  const res = await fetch(
+    `${config.piholeUrl}/api/config/dns/hosts/${encodeURIComponent(entry)}`,
+    { method: "PUT", headers: { sid: session.sid } },
+  );
+  if (!res.ok && res.status !== 201) {
+    const text = await res.text();
+    throw new Error(`Failed to add dns.hosts entry (${res.status}): ${text}`);
+  }
+}
+
+async function deleteHost(session: PiholeSession, entry: string): Promise<void> {
+  const res = await fetch(
+    `${config.piholeUrl}/api/config/dns/hosts/${encodeURIComponent(entry)}`,
+    { method: "DELETE", headers: { sid: session.sid } },
+  );
+  // 204 success; 404 already gone
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text();
+    throw new Error(`Failed to remove dns.hosts entry (${res.status}): ${text}`);
+  }
+}
+
+function hostnameOf(entry: string): string | undefined {
+  const parts = entry.trim().split(/\s+/);
+  return parts[1]?.toLowerCase();
+}
+
 /**
  * Upserts a Local DNS A record via Pi-hole v6 config API.
  * When Pi-hole is not configured, returns skipped.
@@ -73,38 +115,16 @@ export async function syncPiholeDns(
   }
 
   try {
-    const getRes = await fetch(`${config.piholeUrl}/api/config/dns/hosts`, {
-      headers: { sid: session.sid },
-    });
-    if (!getRes.ok) {
-      throw new Error(`Failed to read dns.hosts (${getRes.status})`);
-    }
+    const hosts = await listHosts(session);
+    const target = service.hostname.toLowerCase();
+    const existing = hosts.filter((line) => hostnameOf(line) === target);
 
-    const current = (await getRes.json()) as {
-      config?: { dns?: { hosts?: string[] } };
-    };
-    const hosts = [...(current.config?.dns?.hosts ?? [])];
-    const filtered = hosts.filter((line) => {
-      const parts = line.trim().split(/\s+/);
-      return parts[1]?.toLowerCase() !== service.hostname.toLowerCase();
-    });
+    for (const line of existing) {
+      await deleteHost(session, line);
+    }
 
     if (action === "upsert") {
-      filtered.push(`${service.dns_ip} ${service.hostname}`);
-    }
-
-    const putRes = await fetch(`${config.piholeUrl}/api/config/dns/hosts`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        sid: session.sid,
-      },
-      body: JSON.stringify({ config: { dns: { hosts: filtered } } }),
-    });
-
-    if (!putRes.ok) {
-      const text = await putRes.text();
-      throw new Error(`Failed to write dns.hosts (${putRes.status}): ${text}`);
+      await putHost(session, `${service.dns_ip} ${service.hostname}`);
     }
 
     return {

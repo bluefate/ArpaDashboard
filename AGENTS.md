@@ -100,7 +100,7 @@ Open `https://myapp.dev.home.arpa` (trust the lab local CA if prompted).
 ## Do not
 
 - Do not ask the developer for `PIHOLE_PASSWORD` (server-side only).
-- Do not add manual Caddy blocks when snippet automation is enabled — the API owns `*.dev` / `*.test` routes.
+- Do not add manual Caddy blocks when snippet automation is enabled — the API owns `*.dev.home.arpa` routes.
 - Do not use `.local` or public `.dev` as the zone.
 
 ## Zones
@@ -109,4 +109,3 @@ Open `https://myapp.dev.home.arpa` (trust the lab local CA if prompted).
 |---|---|---|
 | `home.arpa` | Stable / shared | Often hand-managed in the main Caddyfile |
 | `dev.home.arpa` | Laptop / WIP | Auto snippet + Pi-hole |
-| `test.home.arpa` | Experiments | Auto snippet + Pi-hole |

@@ -4,12 +4,20 @@ import { config, publicUrl, type ServiceRecord } from "../config.js";
 import type { IntegrationResult } from "./pihole.js";
 
 function siteBlock(service: ServiceRecord): string {
-  // Public URL may be https://name (via Caddy); backend is almost always plain HTTP.
-  const upstream = `http://${service.ip}${service.port ? `:${service.port}` : ""}`;
+  // Public URL is https://hostname via Caddy; backends (e.g. Vite) are HTTP.
+  // Rewrite Host to the upstream so Vite's allowedHosts check does not 403.
+  const upstreamHost = service.port
+    ? `${service.ip}:${service.port}`
+    : service.ip;
+  const upstream = `http://${upstreamHost}`;
 
   return `${service.hostname} {
 \ttls internal
-\treverse_proxy ${upstream}
+\treverse_proxy ${upstream} {
+\t\theader_up Host ${upstreamHost}
+\t\theader_up X-Forwarded-Host {host}
+\t\theader_up X-Forwarded-Proto {scheme}
+\t}
 }
 `;
 }

@@ -34,7 +34,7 @@ async function refreshList() {
     empty.hidden = false;
     return;
   }
-  renderCategorySections(services, groupsEl);
+  renderCategorySections(services, groupsEl, { zone: ZONE });
 }
 
 async function main() {
@@ -78,6 +78,7 @@ async function main() {
           : `Updated ${result.service.hostname}`,
         true,
       );
+      document.getElementById("register-panel")?.setAttribute("open", "");
       await refreshList();
     } catch (err) {
       showMsg(formMsg, String(err.message || err), false);
