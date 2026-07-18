@@ -1,0 +1,14 @@
+services:
+  arpa-dashboard:
+    build: .
+    container_name: arpa-dashboard
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      # Optional: mount a path Caddy can import
+      # - ./caddy/arpa-dashboard.caddy:/snippets/arpa-dashboard.caddy
+    # Uncomment and set CADDY_SNIPPET_PATH=/snippets/arpa-dashboard.caddy in .env

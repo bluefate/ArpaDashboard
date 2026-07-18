@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to · ArpaDashboard</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("arpa-theme");
+        document.documentElement.dataset.theme = t === "dark" ? "dark" : "light";
+      } catch (_) {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">⌂</span>
+        <div>
+          <p class="brand-name">home.arpa</p>
+          <p class="brand-sub">ArpaDashboard</p>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Primary">
+        <a class="nav-link" href="/">Services</a>
+        <a class="nav-link" href="/api/docs">API</a>
+        <a class="nav-link is-active" href="/howto.html">How to</a>
+      </nav>
+      <div class="topbar-actions">
+        <p class="topbar-meta" id="meta">Setup guide</p>
+        <button
+          type="button"
+          class="theme-toggle"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Switch to dark theme"
+          title="Switch to dark theme"
+        >
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="content guide">
+      <div class="page-head">
+        <h1>How to</h1>
+        <p class="lede">What is automated, what you configure once, and how to register services.</p>
+      </div>
+
+      <section class="status-panel" aria-label="Live integration status">
+        <div class="status-head">
+          <h2>This instance</h2>
+          <p>Live status from <code>/api/health</code></p>
+        </div>
+        <div class="status-grid" id="status-grid"></div>
+      </section>
+
+      <article class="guide-block">
+        <h2>Does it update Pi-hole automatically?</h2>
+        <p>
+          <strong>Yes — when configured.</strong>
+          If <code>PIHOLE_URL</code> and <code>PIHOLE_PASSWORD</code> are set in <code>.env</code>,
+          every create / update / delete through the API also upserts or removes a Pi-hole
+          Local DNS record (<code>dns.hosts</code>) for that hostname.
+        </p>
+        <p>
+          If those variables are empty, the API still saves the service in the dashboard registry,
+          but <strong>DNS is not changed</strong> — you would add the Local DNS entry in Pi-hole yourself.
+          The Automation status panel above shows which mode this instance is in.
+        </p>
+      </article>
+
+      <article class="guide-block">
+        <h2>What about Caddy / HTTPS without ports?</h2>
+        <p>
+          DNS only maps a name to an IP. Ports are not part of DNS.
+          For clean URLs like <code>https://shop.dev.home.arpa</code> (no <code>:3333</code>),
+          the name should resolve to your reverse proxy, and Caddy must proxy to the backend.
+        </p>
+        <ul>
+          <li>
+            <strong>Automated snippet (optional):</strong> set <code>CADDY_SNIPPET_PATH</code> to a file
+            your Caddy container can read, and <code>import</code> that file from your main Caddyfile.
+            ArpaDashboard rewrites the snippet whenever services change.
+          </li>
+          <li>
+            <strong>Manual:</strong> leave <code>CADDY_SNIPPET_PATH</code> empty and add
+            <code>reverse_proxy</code> blocks yourself (same as a typical home-lab Caddyfile).
+          </li>
+        </ul>
+      </article>
+
+      <article class="guide-block">
+        <h2>One-time setup</h2>
+        <ol>
+          <li>Copy <code>.env.example</code> → <code>.env</code>.</li>
+          <li>
+            Generate an API key:
+            <pre><code>openssl rand -base64 32</code></pre>
+            Put it in <code>API_KEY</code>. Never commit <code>.env</code>.
+          </li>
+          <li>Set <code>CADDY_IP</code> to the LAN address clients should resolve for proxied names.</li>
+          <li>
+            To automate Pi-hole: set <code>PIHOLE_URL</code> (e.g. <code>http://pihole.home.arpa</code> or the Pi’s LAN URL)
+            and <code>PIHOLE_PASSWORD</code> (Pi-hole v6 app password / login password used by the API).
+          </li>
+          <li>Optional: set <code>CADDY_SNIPPET_PATH</code> and import that file from Caddy.</li>
+          <li>Start the app (<code>npm run dev</code> or Docker Compose).</li>
+        </ol>
+      </article>
+
+      <article class="guide-block">
+        <h2>Interactive API docs</h2>
+        <p>
+          Open <a href="/api/docs"><code>/api/docs</code></a> for Swagger UI.
+          The OpenAPI document is at <code>/api/openapi.json</code>.
+          Use <strong>Authorize</strong> with your <code>API_KEY</code> to try
+          create / update / delete from the browser.
+        </p>
+      </article>
+
+      <article class="guide-block">
+        <h2>Register a service</h2>
+        <pre><code>export API_KEY='your-generated-key'
+
+curl -sS -X POST http://127.0.0.1:8787/api/services \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "shop",
+    "zone": "dev.home.arpa",
+    "ip": "10.0.0.50",
+    "port": 3333,
+    "title": "Shop admin",
+    "group": "Development",
+    "proxy": true
+  }'</code></pre>
+        <p>
+          With <code>proxy: true</code>, DNS points at <code>CADDY_IP</code> and (if enabled) a Caddy route
+          targets <code>ip:port</code>. With <code>proxy: false</code>, DNS points at <code>ip</code> directly
+          (useful for SSH or non-HTTP).
+        </p>
+        <p>
+          The JSON response includes an <code>integrations</code> object so you can see whether
+          Pi-hole and Caddy steps ran, were skipped, or failed.
+        </p>
+      </article>
+
+      <article class="guide-block">
+        <h2>Enable Pi-hole DNS automation</h2>
+        <p>
+          Set these in your local <code>.env</code> (or the env file your Compose stack mounts).
+          Never commit secrets.
+        </p>
+        <pre><code>PIHOLE_URL=http://192.168.1.2
+PIHOLE_PASSWORD=your-pihole-password</code></pre>
+        <p>Then restart the app:</p>
+        <pre><code># Docker Compose
+docker compose up -d --force-recreate
+
+# or local Node
+npm run dev</code></pre>
+        <p>
+          After restart, <code>/api/health</code> (and the dashboard status panel) should show Pi-hole as automated.
+          Use the Pi-hole web UI password (or an app password if you use one).
+        </p>
+      </article>
+
+      <article class="guide-block">
+        <h2>Naming zones</h2>
+        <ul>
+          <li><code>*.home.arpa</code> — deployed / stable services</li>
+          <li><code>*.dev.home.arpa</code> — laptop / WIP</li>
+          <li><code>*.test.home.arpa</code> — temporary experiments</li>
+        </ul>
+        <p>Stay under <code>home.arpa</code>. Do not invent other <code>*.arpa</code> names.</p>
+      </article>
+
+      <article class="guide-block">
+        <h2>Uninstall / remove</h2>
+        <p>
+          ArpaDashboard does not ship an uninstall binary. Removal is stopping the app and
+          optionally cleaning the records it created. Pick how far you want to go.
+        </p>
+
+        <h3>1. Stop the app only (keep data)</h3>
+        <p>Local Node:</p>
+        <pre><code># stop the terminal process (Ctrl+C), or if you used a process manager, stop that service</code></pre>
+        <p>Docker Compose:</p>
+        <pre><code>docker compose down
+# container removed; ./data and .env remain on disk</code></pre>
+
+        <h3>2. Remove local files</h3>
+        <pre><code># from the project directory
+rm -f .env
+rm -rf data/services.json
+# optional: remove the whole checkout
+# cd .. && rm -rf ArpaDashboard</code></pre>
+        <p>
+          Deleting the app <strong>does not</strong> automatically delete Pi-hole Local DNS entries or
+          Caddy routes. Those live outside this project.
+        </p>
+
+        <h3>3. Clean up services while the API still runs (recommended)</h3>
+        <p>
+          Before you tear the app down, delete each registered service so Pi-hole (and the Caddy snippet,
+          if enabled) are updated:
+        </p>
+        <pre><code>export API_KEY='your-key'
+# list ids
+curl -sS http://127.0.0.1:8787/api/services
+# delete one
+curl -sS -X DELETE http://127.0.0.1:8787/api/services/SERVICE_ID \
+  -H "Authorization: Bearer $API_KEY"</code></pre>
+        <p>
+          If Pi-hole was never configured, delete matching Local DNS rows in the Pi-hole UI
+          (Settings → Local DNS) yourself.
+        </p>
+
+        <h3>4. Reverse proxy / portal</h3>
+        <ul>
+          <li>Remove any <code>reverse_proxy</code> (or <code>import</code>) you added for ArpaDashboard or generated hostnames.</li>
+          <li>If you pointed <code>home.home.arpa</code> at this app, point it back at your previous static site or another upstream, then reload Caddy.</li>
+          <li>If you used <code>CADDY_SNIPPET_PATH</code>, delete that snippet file and drop its <code>import</code> from the Caddyfile.</li>
+        </ul>
+
+        <h3>5. Full wipe checklist</h3>
+        <ol>
+          <li>DELETE each service via the API (or remove Local DNS rows manually).</li>
+          <li><code>docker compose down</code> or stop the Node process.</li>
+          <li>Remove project files / compose stack from the NAS or host.</li>
+          <li>Revert Caddy routes and reload Caddy.</li>
+          <li>Confirm leftover names with <code>dig hostname @&lt;pihole&gt;</code> and remove stragglers in Pi-hole if needed.</li>
+        </ol>
+      </article>
+    </main>
+
+    <footer class="foot">
+      <p class="foot-note">Keep ArpaDashboard on your LAN or VPN. Do not expose the API to the public internet.</p>
+      <a href="https://bluefatelabs.com/" target="_blank" rel="noopener noreferrer">
+        <img
+          class="foot-logo foot-logo-light"
+          alt="BlueFate Labs"
+          src="/images/bluefatelabs-logo.svg"
+          width="160"
+          height="58"
+        />
+        <img
+          class="foot-logo foot-logo-dark"
+          alt="BlueFate Labs"
+          src="/images/bluefatelabs-logo-dark.svg"
+          width="160"
+          height="58"
+        />
+      </a>
+      <p class="foot-legal">
+        ArpaDashboard is an open-source project by
+        <a href="https://bluefatelabs.com/" target="_blank" rel="noopener noreferrer">BlueFate Labs</a>
+        · MIT License. All trademarks, logos, and copyrights are property of their respective owners.
+      </p>
+      <p class="foot-copy">© 2026 BlueFate Labs. All rights reserved.</p>
+      <a
+        class="coffee-btn"
+        href="https://buy.stripe.com/14A00lalU1ZS0tMauI5gc00"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Buy me a coffee</a>
+    </footer>
+  </div>
+  <script src="/howto.js" type="module"></script>
+</body>
+</html>
