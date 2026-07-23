@@ -127,7 +127,7 @@ async function main() {
   keyForm.addEventListener("submit", (e) => {
     e.preventDefault();
     setStoredApiKey(keyInput.value.trim());
-    showMsg(keyMsg, "API key saved for this browser session.", true);
+    showMsg(keyMsg, "API key saved in this browser (persists across restarts).", true);
   });
 
   clearBtn.addEventListener("click", () => {
